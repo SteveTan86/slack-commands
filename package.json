@@ -1,5 +1,6 @@
 {
   "name": "slack-commands",
+  "author": "Steve Tan <i@stevetan.me>",
   "version": "0.0.1",
   "private": true,
   "scripts": {
