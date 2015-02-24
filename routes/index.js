@@ -7,6 +7,7 @@ var prefix = require('superagent-prefix')('https://slack.com/api');
 var _ = require('lodash');
 var async = require('async');
 var moment = require('moment');
+var validator = require('validator');
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
@@ -36,9 +37,9 @@ router.get('/api/files.list', function (req, res, next) {
 
     var page = req.query.page || 1;
 
-    var ts_from = req.query.ts_from || 0;
+    var ts_from = validator.isNumeric(req.query.ts_from) ? moment().subtract(Math.round(validator.toInt(req.query.ts_from)), 'days').unix() : 0;
 
-    var ts_to = req.query.ts_to || new Date();
+    var ts_to = validator.isNumeric(req.query.ts_to) ? moment().subtract(Math.round(validator.toInt(req.query.ts_to)), 'days').unix() : moment().unix();
 
     http.get('/files.list')
         .use(prefix)
@@ -58,9 +59,9 @@ router.get('/api/files.list', function (req, res, next) {
 router.get('/api/files.delete', function (req, res, next) {
     var token = req.query.token || '';
 
-    var min_age = _.isNumber(req.query.min_age) ? Math.round(req.query.min_age) : 30;
+    var min_age = validator.isNumeric(req.query.min_age) ? Math.round(validator.toInt(req.query.min_age)) : 30;
 
-    var ts_to = moment().subtract(min_age, 'days').unix();;
+    var ts_to = moment().subtract(min_age, 'days').unix();
 
     var fileCount = 0;
 
@@ -73,7 +74,7 @@ router.get('/api/files.delete', function (req, res, next) {
                     // GET FILE LIST.
                     http.get('/files.list')
                         .use(prefix)
-                        .query({token: token, ts_to: ts_to})
+                        .query({token: token, ts_from: ts_to, ts_to: 0})
                         .end(function (response) {
                             parseSlackApiResponse(response, ['files', 'paging'], callback);
                         });
